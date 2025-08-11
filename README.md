@@ -1,73 +1,42 @@
-# Welcome to your Lovable project
+# VIP Luxury Vehicle Booking Platform
 
-## Project info
+A **full-stack web application** for booking luxury rides such as limousines, Hummers, sports cars, and premium sedans — designed for **VIP clients** who demand elegance, comfort, and exclusivity.
 
-**URL**: https://lovable.dev/projects/a6bc6336-f021-40b0-8042-e46a91bb56bd
+## ✨ Features
 
-## How can I edit this code?
+- **Responsive Design** – Works seamlessly on mobile, tablet, and desktop.
+- **Luxury Fleet Showcase** – High-quality images and details of available vehicles.
+- **Advanced Booking Form** – Capture customer details, pickup/drop locations, date, time, vehicle choice, and special requests.
+- **Admin Dashboard** – Simple interface to view all bookings in a table.
+- **Form Validation** – Ensures all required fields are filled with proper formats.
+- **MySQL Integration** – Stores bookings securely in a local MySQL database.
+- **Elegant Theme** – Black, gold, and white color scheme for a luxury feel.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## 📄 Pages
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a6bc6336-f021-40b0-8042-e46a91bb56bd) and start prompting.
+1. **Home Page** – Hero section with stunning images and a "Book Now" button.
+2. **About Us** – Brief introduction to the brand and services.
+3. **Services / Fleet** – Vehicle listings with descriptions and pricing.
+4. **Booking Page** – Advanced booking form with validation.
+5. **Contact Us** – Contact form + company details.
+6. **Privacy Policy** – Standard terms.
+7. **Admin Dashboard** – View bookings in a clean table layout.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🛠 Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**Frontend:**  
+- HTML, CSS, JavaScript  
+- React (via Vite)  
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Backend:**  
+- Node.js + Express  
+- PHP alternative possible (but this version uses Node.js)  
 
-Follow these steps:
+**Database:**  
+- MySQL (local via phpMyAdmin)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/a6bc6336-f021-40b0-8042-e46a91bb56bd) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+---
