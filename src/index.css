@@ -254,11 +254,30 @@
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-luxury-navy to-luxury-gold text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105;
+    background: linear-gradient(to right, hsl(var(--luxury-navy)), hsl(var(--luxury-gold)));
+    color: white;
+    font-weight: 600;
+    padding: 1rem 2rem;
+    border-radius: 9999px;
+    transition: all 0.3s;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    transform: scale(1.05);
   }
 
   .btn-secondary {
-    @apply bg-transparent border-2 border-luxury-gold text-luxury-gold font-semibold py-4 px-8 rounded-full transition-all duration-300 hover:bg-luxury-gold hover:text-white;
+    background: transparent;
+    border: 2px solid hsl(var(--luxury-gold));
+    color: hsl(var(--luxury-gold));
+    font-weight: 600;
+    padding: 1rem 2rem;
+    border-radius: 9999px;
+    transition: all 0.3s;
+  }
+  .btn-secondary:hover {
+    background: hsl(var(--luxury-gold));
+    color: white;
   }
 
   .section-padding {
