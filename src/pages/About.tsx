@@ -149,7 +149,7 @@ const About = () => {
             <div className="fade-in-up slide-in-right">
               <div className="relative">
                 <img 
-                  src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  src="https://images.unsplash.com/photo-1590178828415-4edc35b8faac?q=80&w=818&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                   alt="Luxury vehicle interior"
                   className="rounded-2xl shadow-2xl w-full h-96 object-cover"
                 />
