@@ -99,178 +99,51 @@ db.connect((err) => {
 
 // Test route
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'Server is running!' });
+  console.log('✅ Test endpoint hit');
+  res.json({ message: 'Server is running!', timestamp: new Date().toISOString() });
 });
 
-// Auth Routes
+// AUTHENTICATION ROUTES
 
 // Register new user
 app.post('/api/auth/register', async (req, res) => {
+  console.log('🔐 Register endpoint hit with data:', req.body);
+  
   const { full_name, email, password, phone } = req.body;
 
   if (!full_name || !email || !password) {
+    console.log('❌ Missing required fields');
     return res.status(400).json({ error: 'Full name, email, and password are required' });
   }
 
   try {
     // Check if user already exists
+    console.log('🔍 Checking if user exists with email:', email);
     const checkQuery = 'SELECT id FROM users WHERE email = ?';
+    
     db.query(checkQuery, [email], async (err, results) => {
       if (err) {
-        console.error('Error checking user:', err);
+        console.error('❌ Database error checking user:', err);
         return res.status(500).json({ error: 'Database error' });
       }
 
       if (results.length > 0) {
+        console.log('❌ User already exists');
         return res.status(400).json({ error: 'User already exists with this email' });
       }
 
-      // Hash password and create user
-      const hashedPassword = await hashPassword(password);
-      const insertQuery = `
-        INSERT INTO users (full_name, email, password_hash, phone, auth_provider) 
-        VALUES (?, ?, ?, ?, 'local')
-      `;
-
-      db.query(insertQuery, [full_name, email, hashedPassword, phone || null], (err, results) => {
-        if (err) {
-          console.error('Error creating user:', err);
-          return res.status(500).json({ error: 'Failed to create user' });
-        }
-
-        const user = {
-          id: results.insertId,
-          full_name,
-          email,
-          role: 'user'
-        };
-
-        const token = generateToken(user);
-        res.status(201).json({
-          message: 'User created successfully',
-          user: { id: user.id, full_name, email, role: 'user' },
-          token
-        });
-      });
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
-  }
-});
-
-// Login user
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  const query = 'SELECT * FROM users WHERE email = ? AND is_active = TRUE';
-  db.query(query, [email], async (err, results) => {
-    if (err) {
-      console.error('Error fetching user:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-
-    if (results.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    const user = results[0];
-
-    try {
-      const isValidPassword = await verifyPassword(password, user.password_hash);
-      if (!isValidPassword) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-
-      // Update last login
-      const updateQuery = 'UPDATE users SET last_login = NOW() WHERE id = ?';
-      db.query(updateQuery, [user.id]);
-
-      const token = generateToken(user);
-      res.json({
-        message: 'Login successful',
-        user: {
-          id: user.id,
-          full_name: user.full_name,
-          email: user.email,
-          role: user.role
-        },
-        token
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ error: 'Login failed' });
-    }
-  });
-});
-
-// Google OAuth login
-app.post('/api/auth/google', async (req, res) => {
-  const { token } = req.body;
-
-  if (!token) {
-    return res.status(400).json({ error: 'Google token is required' });
-  }
-
-  try {
-    // Verify Google token
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const { sub: google_id, email, name: full_name, picture: profile_picture } = payload;
-
-    // Check if user exists
-    const checkQuery = 'SELECT * FROM users WHERE email = ? OR google_id = ?';
-    db.query(checkQuery, [email, google_id], (err, results) => {
-      if (err) {
-        console.error('Error checking user:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      if (results.length > 0) {
-        // User exists, update and login
-        const user = results[0];
-        const updateQuery = `
-          UPDATE users 
-          SET google_id = ?, profile_picture = ?, last_login = NOW(), email_verified = TRUE
-          WHERE id = ?
-        `;
-        
-        db.query(updateQuery, [google_id, profile_picture, user.id], (err) => {
-          if (err) {
-            console.error('Error updating user:', err);
-            return res.status(500).json({ error: 'Failed to update user' });
-          }
-
-          const token = generateToken(user);
-          res.json({
-            message: 'Login successful',
-            user: {
-              id: user.id,
-              full_name: user.full_name,
-              email: user.email,
-              role: user.role
-            },
-            token
-          });
-        });
-      } else {
-        // Create new user
+      try {
+        // Hash password and create user
+        console.log('🔐 Creating new user');
+        const hashedPassword = await hashPassword(password);
         const insertQuery = `
-          INSERT INTO users (full_name, email, google_id, profile_picture, auth_provider, email_verified) 
-          VALUES (?, ?, ?, ?, 'google', TRUE)
+          INSERT INTO users (full_name, email, password_hash, phone, auth_provider, email_verified, is_active) 
+          VALUES (?, ?, ?, ?, 'local', 1, 1)
         `;
 
-        db.query(insertQuery, [full_name, email, google_id, profile_picture], (err, results) => {
+        db.query(insertQuery, [full_name, email, hashedPassword, phone || null], (err, results) => {
           if (err) {
-            console.error('Error creating user:', err);
+            console.error('❌ Error creating user:', err);
             return res.status(500).json({ error: 'Failed to create user' });
           }
 
@@ -282,26 +155,97 @@ app.post('/api/auth/google', async (req, res) => {
           };
 
           const token = generateToken(user);
+          
+          console.log('✅ User created successfully:', { id: user.id, email: user.email });
           res.status(201).json({
-            message: 'User created and logged in successfully',
-            user,
+            message: 'User created successfully',
+            user: { id: user.id, full_name, email, role: 'user' },
             token
           });
         });
+      } catch (hashError) {
+        console.error('❌ Password hashing error:', hashError);
+        return res.status(500).json({ error: 'Failed to process password' });
       }
     });
   } catch (error) {
-    console.error('Google auth error:', error);
-    res.status(400).json({ error: 'Invalid Google token' });
+    console.error('❌ Registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
   }
+});
+
+// Login user
+app.post('/api/auth/login', async (req, res) => {
+  console.log('🔐 Login endpoint hit with email:', req.body.email);
+  
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    console.log('❌ Missing email or password');
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  const query = 'SELECT * FROM users WHERE email = ? AND is_active = TRUE';
+  
+  db.query(query, [email], async (err, results) => {
+    if (err) {
+      console.error('❌ Database error fetching user:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (results.length === 0) {
+      console.log('❌ User not found or inactive:', email);
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = results[0];
+    console.log('👤 User found:', { id: user.id, email: user.email, role: user.role });
+
+    try {
+      const isValidPassword = await verifyPassword(password, user.password_hash);
+      if (!isValidPassword) {
+        console.log('❌ Invalid password for user:', user.email);
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      // Update last login
+      const updateQuery = 'UPDATE users SET last_login = NOW() WHERE id = ?';
+      db.query(updateQuery, [user.id]);
+
+      const token = generateToken(user);
+      
+      console.log('✅ Login successful for user:', { id: user.id, email: user.email });
+      res.json({
+        message: 'Login successful',
+        user: {
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role
+        },
+        token
+      });
+    } catch (error) {
+      console.error('❌ Password verification error:', error);
+      res.status(500).json({ error: 'Login failed' });
+    }
+  });
+});
+
+// Google OAuth login (placeholder for now)
+app.post('/api/auth/google', async (req, res) => {
+  console.log('🔐 Google OAuth endpoint hit');
+  res.status(501).json({ error: 'Google OAuth not configured yet' });
 });
 
 // Get current user profile
 app.get('/api/auth/profile', authenticateToken, (req, res) => {
+  console.log('👤 Profile endpoint hit for user:', req.user.id);
+  
   const query = 'SELECT id, full_name, email, phone, role, profile_picture, created_at FROM users WHERE id = ?';
   db.query(query, [req.user.id], (err, results) => {
     if (err) {
-      console.error('Error fetching profile:', err);
+      console.error('❌ Error fetching profile:', err);
       return res.status(500).json({ error: 'Failed to fetch profile' });
     }
 
@@ -309,9 +253,12 @@ app.get('/api/auth/profile', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    console.log('✅ Profile fetched for user:', req.user.id);
     res.json({ user: results[0] });
   });
 });
+
+// EXISTING ROUTES
 
 // Get all bookings
 app.get('/api/bookings', authenticateToken, (req, res) => {
@@ -490,5 +437,6 @@ app.put('/api/admin/users/:id/role', authenticateToken, requireAdmin, (req, res)
 // Start server
 const PORT = process.env.API_PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`🔗 Test your API at: http://localhost:${PORT}/api/test`);
 });
