@@ -1,12 +1,22 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Phone, Mail, MapPin, Crown, Star, Shield, Clock } from "lucide-react";
+import { Menu, X, Phone, Mail, MapPin, Crown, Star, Shield, Clock, User, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,10 +30,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
     { name: "Fleet", href: "/fleet" },
-    { name: "Book Now", href: "/booking" },
     { name: "Contact", href: "/contact" },
-    { name: "Admin", href: "/admin" },
   ];
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,6 +79,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   ></span>
                 </Link>
               ))}
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className={`relative text-sm font-medium transition-all duration-300 hover:text-accent group ${
+                    location.pathname === '/admin' ? "text-accent" : "text-foreground"
+                  }`}
+                >
+                  Admin
+                  <span
+                    className={`absolute -bottom-1 left-0 h-0.5 bg-accent transition-all duration-300 ${
+                      location.pathname === '/admin' ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  ></span>
+                </Link>
+              )}
             </nav>
 
             {/* Contact Info & CTA */}
@@ -77,9 +104,53 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <span>+1 (555) 123-4567</span>
                 </div>
               </div>
-              <Button asChild className="btn-primary">
-                <Link to="/booking">Book Now</Link>
-              </Button>
+              
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-4">
+                  <Button asChild className="btn-primary">
+                    <Link to="/booking">Book Now</Link>
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                        {user?.profile_picture ? (
+                          <img
+                            src={user.profile_picture}
+                            alt={user.full_name}
+                            className="h-10 w-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user?.full_name}</p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user?.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <Button variant="ghost" asChild>
+                    <Link to="/login">Sign In</Link>
+                  </Button>
+                  <Button asChild className="btn-primary">
+                    <Link to="/register">Sign Up</Link>
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -129,16 +200,54 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 {item.name}
               </Link>
             ))}
+            {user?.role === 'admin' && (
+              <Link
+                to="/admin"
+                className={`block py-3 px-4 text-lg font-medium transition-all duration-300 rounded-xl hover:bg-accent/10 hover:text-accent ${
+                  location.pathname === '/admin' ? "text-accent bg-accent/10" : "text-foreground"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin
+              </Link>
+            )}
             <div className="pt-4 border-t border-white/20">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
                 <Phone className="h-4 w-4" />
                 <span>+1 (555) 123-4567</span>
               </div>
-              <Button asChild className="w-full btn-primary">
-                <Link to="/booking" onClick={() => setIsMenuOpen(false)}>
-                  Book Now
-                </Link>
-              </Button>
+              {isAuthenticated ? (
+                <div className="space-y-3">
+                  <div className="text-sm">
+                    <p className="font-medium">{user?.full_name}</p>
+                    <p className="text-muted-foreground">{user?.email}</p>
+                  </div>
+                  <Button asChild className="w-full btn-primary">
+                    <Link to="/booking" onClick={() => setIsMenuOpen(false)}>
+                      Book Now
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}>
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Button variant="outline" asChild className="w-full">
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button asChild className="w-full btn-primary">
+                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                      Sign Up
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -214,6 +323,26 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       </Link>
                     </li>
                   ))}
+                  {!isAuthenticated && (
+                    <>
+                      <li>
+                        <Link
+                          to="/login"
+                          className="text-white/80 hover:text-accent transition-all duration-300 hover:translate-x-2 transform inline-block"
+                        >
+                          Sign In
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/register"
+                          className="text-white/80 hover:text-accent transition-all duration-300 hover:translate-x-2 transform inline-block"
+                        >
+                          Sign Up
+                        </Link>
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
 
