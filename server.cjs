@@ -552,6 +552,290 @@ app.get('/api/bookings', authenticateToken, (req, res) => {
   });
 });
 
+// Send booking confirmation email
+const sendBookingConfirmationEmail = async (bookingData) => {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('Email configuration not found. Booking confirmation email not sent.');
+    return;
+  }
+
+  const {
+    bookingId,
+    full_name,
+    contact_number,
+    email,
+    pickup_address,
+    drop_address,
+    pickup_date,
+    pickup_time,
+    vehicle_type,
+    special_requests
+  } = bookingData;
+
+  // Format date and time for display
+  const formattedDate = new Date(pickup_date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  const formattedTime = new Date(`2000-01-01T${pickup_time}`).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  // Format vehicle type for display
+  const formattedVehicleType = vehicle_type.split('-').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+
+  // Get estimated price based on vehicle type
+  const getPriceEstimate = (vehicleType) => {
+    const priceMap = {
+      'luxury-sedan': '$150-200/hour',
+      'limousine': '$300-400/hour',
+      'suv-luxury': '$180-250/hour',
+      'sports-car': '$300-500/hour',
+      'hummer': '$250-350/hour',
+      'rolls-royce': '$500-600/hour'
+    };
+    return priceMap[vehicleType] || 'Contact for pricing';
+  };
+
+  const priceEstimate = getPriceEstimate(vehicle_type);
+
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Booking Confirmation - VIP Elite Transport</title>
+      <style>
+        body { 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          line-height: 1.6; 
+          color: #333; 
+          margin: 0; 
+          padding: 0; 
+          background-color: #f5f5f5;
+        }
+        .container { 
+          max-width: 600px; 
+          margin: 0 auto; 
+          background: white;
+          box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header { 
+          background: linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #ffd700 100%); 
+          color: white; 
+          padding: 40px 30px; 
+          text-align: center; 
+        }
+        .header h1 { 
+          margin: 0; 
+          font-size: 28px; 
+          font-weight: bold; 
+        }
+        .header .subtitle { 
+          margin: 10px 0 0 0; 
+          font-size: 16px; 
+          opacity: 0.9; 
+        }
+        .content { 
+          padding: 40px 30px; 
+        }
+        .booking-card {
+          background: #f8f9fa;
+          border-radius: 12px;
+          padding: 30px;
+          margin: 20px 0;
+          border-left: 4px solid #ffd700;
+        }
+        .booking-id {
+          background: #1a202c;
+          color: #ffd700;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-weight: bold;
+          font-size: 14px;
+          display: inline-block;
+          margin-bottom: 20px;
+        }
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 0;
+          border-bottom: 1px solid #e9ecef;
+        }
+        .detail-row:last-child {
+          border-bottom: none;
+        }
+        .detail-label {
+          font-weight: 600;
+          color: #495057;
+          flex: 1;
+        }
+        .detail-value {
+          flex: 2;
+          text-align: right;
+          color: #212529;
+        }
+        .highlight {
+          background: #fff3cd;
+          padding: 20px;
+          border-radius: 8px;
+          border-left: 4px solid #ffd700;
+          margin: 20px 0;
+        }
+        .highlight h3 {
+          margin: 0 0 10px 0;
+          color: #856404;
+        }
+        .contact-info {
+          background: #e7f3ff;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+        }
+        .footer { 
+          background: #f8f9fa; 
+          padding: 30px; 
+          text-align: center; 
+          border-top: 1px solid #dee2e6;
+        }
+        .footer p { 
+          margin: 5px 0; 
+          color: #6c757d; 
+          font-size: 14px; 
+        }
+        .social-links {
+          margin: 20px 0;
+        }
+        .social-links a {
+          display: inline-block;
+          margin: 0 10px;
+          color: #1a202c;
+          text-decoration: none;
+        }
+        @media (max-width: 600px) {
+          .container { margin: 0; }
+          .header, .content, .footer { padding: 20px; }
+          .detail-row { flex-direction: column; align-items: flex-start; }
+          .detail-value { text-align: left; margin-top: 5px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🚗 VIP Elite Transport</h1>
+          <p class="subtitle">Booking Confirmation</p>
+        </div>
+        
+        <div class="content">
+          <h2>Thank you for your booking, ${full_name}!</h2>
+          <p>We're excited to provide you with our premium transportation service. Your booking has been confirmed and our team will ensure everything is perfect for your journey.</p>
+          
+          <div class="booking-card">
+            <div class="booking-id">Booking ID: #${bookingId}</div>
+            
+            <div class="detail-row">
+              <span class="detail-label">📅 Date:</span>
+              <span class="detail-value">${formattedDate}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">🕐 Time:</span>
+              <span class="detail-value">${formattedTime}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">🚗 Vehicle:</span>
+              <span class="detail-value">${formattedVehicleType}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">💰 Estimated Price:</span>
+              <span class="detail-value">${priceEstimate}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">📍 Pickup:</span>
+              <span class="detail-value">${pickup_address}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">🎯 Destination:</span>
+              <span class="detail-value">${drop_address}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">👤 Contact:</span>
+              <span class="detail-value">${contact_number}</span>
+            </div>
+            
+            ${special_requests ? `
+            <div class="detail-row">
+              <span class="detail-label">📝 Special Requests:</span>
+              <span class="detail-value">${special_requests}</span>
+            </div>
+            ` : ''}
+          </div>
+          
+          <div class="highlight">
+            <h3>⏰ What happens next?</h3>
+            <p>Our team will contact you 24 hours before your scheduled pickup to confirm all details and provide you with your chauffeur's contact information.</p>
+          </div>
+          
+          <div class="contact-info">
+            <h3>📞 Need to make changes?</h3>
+            <p>Contact us at least 4 hours before your scheduled pickup:</p>
+            <p><strong>Phone:</strong> +1 (555) 123-4567</p>
+            <p><strong>Email:</strong> bookings@vipelite.com</p>
+          </div>
+          
+          <p><strong>Important:</strong> Please save this email for your records. You may be asked to show this confirmation upon pickup.</p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>VIP Elite Transport</strong></p>
+          <p>123 Luxury Avenue, Premium District, City 12345</p>
+          <p>Phone: +1 (555) 123-4567 | Email: info@vipelite.com</p>
+          
+          <div class="social-links">
+            <a href="#">Facebook</a> |
+            <a href="#">Twitter</a> |
+            <a href="#">Instagram</a> |
+            <a href="#">LinkedIn</a>
+          </div>
+          
+          <p style="margin-top: 20px; font-size: 12px; color: #999;">
+            © 2024 VIP Elite Transport. All rights reserved.<br>
+            This is an automated message. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: {
+      name: process.env.FROM_NAME || 'VIP Elite Transport',
+      address: process.env.FROM_EMAIL || process.env.SMTP_USER,
+    },
+    to: email,
+    subject: `Booking Confirmation #${bookingId} - VIP Elite Transport`,
+    html: emailHtml,
+  };
+
+  await emailTransporter.sendMail(mailOptions);
+  console.log(`Booking confirmation email sent to ${email} for booking #${bookingId}`);
+};
+
 // Create new booking
 app.post('/api/bookings', authenticateToken, (req, res) => {
   const {
@@ -590,11 +874,30 @@ app.post('/api/bookings', authenticateToken, (req, res) => {
     req.user.id
   ];
 
-  db.query(query, values, (err, results) => {
+  db.query(query, values, async (err, results) => {
     if (err) {
       console.error('Error creating booking:', err);
       res.status(500).json({ error: 'Failed to create booking' });
       return;
+    }
+    
+    // Send booking confirmation email
+    try {
+      await sendBookingConfirmationEmail({
+        bookingId: results.insertId,
+        full_name,
+        contact_number,
+        email,
+        pickup_address,
+        drop_address,
+        pickup_date,
+        pickup_time,
+        vehicle_type,
+        special_requests
+      });
+    } catch (emailError) {
+      console.error('Error sending booking confirmation email:', emailError);
+      // Don't fail the booking if email fails, just log the error
     }
     
     res.status(201).json({ 

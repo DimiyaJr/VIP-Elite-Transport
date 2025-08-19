@@ -85,7 +85,7 @@ const Booking = () => {
       if (error) {
         toast.error(error);
       } else {
-        toast.success('Booking submitted successfully! We will contact you shortly.');
+        toast.success('Booking confirmed! Check your email for confirmation details.');
         // Reset form
         setFormData({
           full_name: '',
