@@ -1,6 +1,6 @@
 # VIP Luxury Vehicle Booking Platform
 
-A **full-stack web application** for booking luxury rides such as limousines, Hummers, sports cars, and premium sedans — designed for **VIP clients** who demand elegance, comfort, and exclusivity.
+A **full-stack web application** for booking luxury rides such as limousines, Hummers, sports cars, and premium sedans, designed for **VIP clients** who demand elegance, comfort, and exclusivity.
 
 ## ✨ Features
 
